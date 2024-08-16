@@ -1,0 +1,75 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+```{r}
+# Load library
+library(tidyverse)
+library(here)
+library(janitor)
+```
+
+```{r}
+# import tilapia data
+us_tilapia_imports <- read_csv(here::here("data", "us_tilapia_imports.csv"))
+```
+
+```{r}
+# data clean up
+#u s_tilapia_imports <- janitor::clean_names(us_tilapia_imports)
+
+# data exploration
+summary(us_tilapia_imports)
+names(us_tilapia_imports)
+dim(us_tilapia_imports)
+skimr::skim((us_tilapia_imports))
+```
+
+```{r}
+us_tilapia_imports <- us_tilapia_imports %>%
+  pivot_longer(cols = -country, names_to = "year", values_to = "imports")
+```
+
+```{r}
+# check class of year
+class(us_tilapia_imports$year)
+
+# change to numeric
+us_tilapia_imports <- us_tilapia_imports %>%
+  mutate(year = as.numeric(year))
+```
+
+```{r}
+yearly_tilapia_tot <- us_tilapia_imports %>%
+  group_by(year) %>%
+  summarize(total_imports = sum(imports, na.rm = TRUE))
+```
+
+```{r}
+yearly_tilapia <- ggplot(data = yearly_tilapia_tot, aes(x = year, y = total_imports)) +
+  geom_line() +
+  theme_classic() + 
+  labs(title = "Tilapia Imports to the US", x = "Year", y = "Total Imports (thousands of pounds)")
+```
+
+```{r}
+ggsave(here::here("figs", "yearly_tilapia.png"), width = 7, height = 6)
+```
+
+```{r}
+imports_country <- us_tilapia_imports %>%
+  filter(country == c("Ecuador", "Honduras", "Costa Rica", "Mexico"))
+```
+
+```{r}
+country_imports <- ggplot(data = imports_country, aes(x = year, y = imports, color = country)) + 
+  geom_line() +
+  theme_classic() + 
+  labs(title = "Tilapia Imports to the US", x = "Year", y = "Total Imports (thousands of pounds)")
+```
+
+```{r}
+ggsave(here::here("figs", "country_imports.jpeg"), width = 7, height = 6)
+```
+
